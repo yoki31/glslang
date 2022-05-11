@@ -1007,6 +1007,8 @@ spv::BuiltIn TGlslangToSpvTraverser::TranslateBuiltInDecoration(glslang::TBuiltI
         return spv::BuiltInRayTminKHR;
     case glslang::EbvRayTmax:
         return spv::BuiltInRayTmaxKHR;
+    case glslang::EbvCullMask:
+        return spv::BuiltInCullMaskKHR;
     case glslang::EbvInstanceCustomIndex:
         return spv::BuiltInInstanceCustomIndexKHR;
     case glslang::EbvHitT:
@@ -1777,6 +1779,13 @@ TGlslangToSpvTraverser::TGlslangToSpvTraverser(unsigned int spvVersion,
             builder.addCapability(spv::CapabilityRayTracingNV);
             builder.addExtension("SPV_NV_ray_tracing");
         }
+	if (glslangIntermediate->getStage() != EShLangRayGen && glslangIntermediate->getStage() != EShLangCallable)
+	{
+		if (extensions.find("GL_EXT_ray_cull_mask") != extensions.end()) {
+			builder.addCapability(spv::CapabilityRayCullMaskKHR);
+			builder.addExtension("SPV_KHR_ray_cull_mask");
+		}
+	}
         break;
     }
     case EShLangTaskNV:
@@ -9078,15 +9087,19 @@ spv::Id TGlslangToSpvTraverser::createSpvConstantFromConstUnionArray(const glsla
                 break;
 #ifndef GLSLANG_WEB
             case glslang::EbtInt8:
+                builder.addCapability(spv::CapabilityInt8);
                 spvConsts.push_back(builder.makeInt8Constant(zero ? 0 : consts[nextConst].getI8Const()));
                 break;
             case glslang::EbtUint8:
+                builder.addCapability(spv::CapabilityInt8);
                 spvConsts.push_back(builder.makeUint8Constant(zero ? 0 : consts[nextConst].getU8Const()));
                 break;
             case glslang::EbtInt16:
+                builder.addCapability(spv::CapabilityInt16);
                 spvConsts.push_back(builder.makeInt16Constant(zero ? 0 : consts[nextConst].getI16Const()));
                 break;
             case glslang::EbtUint16:
+                builder.addCapability(spv::CapabilityInt16);
                 spvConsts.push_back(builder.makeUint16Constant(zero ? 0 : consts[nextConst].getU16Const()));
                 break;
             case glslang::EbtInt64:
@@ -9099,6 +9112,7 @@ spv::Id TGlslangToSpvTraverser::createSpvConstantFromConstUnionArray(const glsla
                 spvConsts.push_back(builder.makeDoubleConstant(zero ? 0.0 : consts[nextConst].getDConst()));
                 break;
             case glslang::EbtFloat16:
+                builder.addCapability(spv::CapabilityFloat16);
                 spvConsts.push_back(builder.makeFloat16Constant(zero ? 0.0F : (float)consts[nextConst].getDConst()));
                 break;
 #endif
@@ -9127,15 +9141,19 @@ spv::Id TGlslangToSpvTraverser::createSpvConstantFromConstUnionArray(const glsla
             break;
 #ifndef GLSLANG_WEB
         case glslang::EbtInt8:
+            builder.addCapability(spv::CapabilityInt8);
             scalar = builder.makeInt8Constant(zero ? 0 : consts[nextConst].getI8Const(), specConstant);
             break;
         case glslang::EbtUint8:
+            builder.addCapability(spv::CapabilityInt8);
             scalar = builder.makeUint8Constant(zero ? 0 : consts[nextConst].getU8Const(), specConstant);
             break;
         case glslang::EbtInt16:
+            builder.addCapability(spv::CapabilityInt16);
             scalar = builder.makeInt16Constant(zero ? 0 : consts[nextConst].getI16Const(), specConstant);
             break;
         case glslang::EbtUint16:
+            builder.addCapability(spv::CapabilityInt16);
             scalar = builder.makeUint16Constant(zero ? 0 : consts[nextConst].getU16Const(), specConstant);
             break;
         case glslang::EbtInt64:
@@ -9148,6 +9166,7 @@ spv::Id TGlslangToSpvTraverser::createSpvConstantFromConstUnionArray(const glsla
             scalar = builder.makeDoubleConstant(zero ? 0.0 : consts[nextConst].getDConst(), specConstant);
             break;
         case glslang::EbtFloat16:
+            builder.addCapability(spv::CapabilityFloat16);
             scalar = builder.makeFloat16Constant(zero ? 0.0F : (float)consts[nextConst].getDConst(), specConstant);
             break;
         case glslang::EbtReference:
